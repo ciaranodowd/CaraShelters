@@ -15,6 +15,8 @@ const PIPELINE_STAGES = [
   { key: "COMPLETED", label: "Adopted", color: "bg-slate-50 border-slate-200", badge: "bg-slate-100 text-slate-700" },
 ]
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdoptionsPage({ params }: { params: { orgSlug: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return null

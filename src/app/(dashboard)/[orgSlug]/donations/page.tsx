@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, TrendingUp } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 
+export const dynamic = 'force-dynamic'
+
 export default async function DonationsPage({ params }: { params: { orgSlug: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return null

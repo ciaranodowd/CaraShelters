@@ -4,6 +4,8 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { SPECIES_LABELS } from "@/lib/constants"
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata({ params }: { params: { orgSlug: string } }) {
   const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { name: true } })
   return { title: org ? `${org.name} — Adopt` : "Adopt" }

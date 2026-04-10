@@ -12,6 +12,8 @@ import { SPECIES_LABELS, STATUS_LABELS, SIZE_LABELS } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
 import { PhotoUpload } from "@/components/photo-upload"
 
+export const dynamic = 'force-dynamic'
+
 export default async function AnimalPage({
   params,
 }: {

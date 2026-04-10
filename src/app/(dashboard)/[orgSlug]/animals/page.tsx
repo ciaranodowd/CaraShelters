@@ -10,6 +10,8 @@ import { Plus, Search } from "lucide-react"
 import { SPECIES_LABELS, STATUS_LABELS, STATUS_COLORS } from "@/lib/constants"
 import { AnimalStatus, Species } from "@prisma/client"
 
+export const dynamic = 'force-dynamic'
+
 export default async function AnimalsPage({
   params,
   searchParams,

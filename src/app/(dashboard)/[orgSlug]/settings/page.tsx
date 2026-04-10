@@ -7,6 +7,8 @@ import { OrgSettingsForm } from "./_components/org-settings-form"
 import { TeamSettings } from "./_components/team-settings"
 import { GdprSettings } from "./_components/gdpr-settings"
 
+export const dynamic = 'force-dynamic'
+
 export default async function SettingsPage({
   params,
   searchParams,

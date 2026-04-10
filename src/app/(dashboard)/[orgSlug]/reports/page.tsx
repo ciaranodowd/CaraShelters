@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { SPECIES_LABELS, STATUS_LABELS } from "@/lib/constants"
 import { formatCurrency } from "@/lib/utils"
 
+export const dynamic = 'force-dynamic'
+
 export default async function ReportsPage({ params }: { params: { orgSlug: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return null

@@ -5,6 +5,8 @@ import { SPECIES_LABELS, SPECIES_EMOJI, SIZE_LABELS } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
 import { Heart, MapPin, Calendar, Ruler, CheckCircle, XCircle, ArrowLeft } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata({
   params,
 }: {

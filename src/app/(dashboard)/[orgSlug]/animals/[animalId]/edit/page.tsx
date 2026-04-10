@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma"
 import { notFound, redirect } from "next/navigation"
 import { AnimalForm } from "../../_components/animal-form"
 
+export const dynamic = 'force-dynamic'
+
 export default async function EditAnimalPage({ params }: { params: { orgSlug: string; animalId: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect("/login")

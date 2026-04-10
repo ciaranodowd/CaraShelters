@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma"
 import { Sidebar } from "@/components/layout/sidebar"
 import { MobileNav } from "@/components/layout/mobile-nav"
 
+export const dynamic = 'force-dynamic'
+
 export default async function OrgLayout({
   children,
   params,

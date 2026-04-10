@@ -8,6 +8,8 @@ import { PawPrint, Users, Heart, DollarSign, TrendingUp } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage({ params }: { params: { orgSlug: string } }) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return null
