@@ -2,8 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { SPECIES_LABELS, STATUS_LABELS } from "@/lib/constants"
+import { SPECIES_LABELS } from "@/lib/constants"
 
 export async function generateMetadata({ params }: { params: { orgSlug: string } }) {
   const org = await prisma.organization.findUnique({ where: { slug: params.orgSlug }, select: { name: true } })

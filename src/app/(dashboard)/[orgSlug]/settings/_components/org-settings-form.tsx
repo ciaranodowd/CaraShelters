@@ -56,7 +56,7 @@ export function OrgSettingsForm({ org, isAdmin }: { org: any; isAdmin: boolean }
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Organisation details</CardTitle>
-        <CardDescription>Update your shelter's public information</CardDescription>
+        <CardDescription>Update your shelter&apos;s public information</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

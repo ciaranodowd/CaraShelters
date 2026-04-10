@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { PawPrint, Users, Heart, DollarSign, TrendingUp, AlertCircle } from "lucide-react"
+import { PawPrint, Users, Heart, DollarSign, TrendingUp } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
 
@@ -20,7 +20,7 @@ export default async function DashboardPage({ params }: { params: { orgSlug: str
     availableAnimals,
     inFosterAnimals,
     pendingApps,
-    totalAdopters,
+    ,
     monthDonations,
     recentAnimals,
     recentApps,

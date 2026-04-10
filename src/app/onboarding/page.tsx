@@ -11,7 +11,6 @@ import { COUNTIES } from "@/lib/constants"
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [form, setForm] = useState({
@@ -59,7 +58,7 @@ export default function OnboardingPage() {
             <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg">C</div>
             <span className="text-2xl font-bold text-primary">Cara</span>
           </div>
-          <p className="text-sm text-muted-foreground">Let's set up your shelter</p>
+          <p className="text-sm text-muted-foreground">Let&apos;s set up your shelter</p>
         </div>
 
         <Card>

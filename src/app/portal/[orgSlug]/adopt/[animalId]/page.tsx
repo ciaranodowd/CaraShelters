@@ -235,7 +235,7 @@ export default function AdoptApplicationPage() {
               </div>
               {form.hasChildren && (
                 <div className="space-y-1.5">
-                  <Label>Children's ages</Label>
+                  <Label>Children&apos;s ages</Label>
                   <Input placeholder="e.g. 3, 7, 12" value={form.childrenAges} onChange={set("childrenAges")} />
                 </div>
               )}

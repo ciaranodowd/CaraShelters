@@ -81,7 +81,7 @@ export function TeamSettings({ org, members, currentUserId, isAdmin }: {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Invite team member</CardTitle>
-            <CardDescription>They'll receive an email to join your organisation</CardDescription>
+            <CardDescription>They&apos;ll receive an email to join your organisation</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleInvite} className="space-y-3">

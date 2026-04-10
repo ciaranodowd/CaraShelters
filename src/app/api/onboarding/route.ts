@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   if (!name || !email) return NextResponse.json({ error: "Name and email are required" }, { status: 400 })
 
   // Generate unique slug
-  let baseSlug = slugify(name)
+  const baseSlug = slugify(name)
   let slug = baseSlug
   let suffix = 1
   while (await prisma.organization.findUnique({ where: { slug } })) {

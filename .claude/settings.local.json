@@ -4,7 +4,8 @@
       "Bash(grep -E \"\\\\.ts$\")",
       "Bash(npx tsc:*)",
       "Bash(xargs grep:*)",
-      "Bash(ls C:/Users/colin/OneDrive/Desktop/cara/.env*)"
+      "Bash(ls C:/Users/colin/OneDrive/Desktop/cara/.env*)",
+      "Bash(npx next:*)"
     ]
   }
 }

@@ -2,10 +2,9 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { formatDate } from "@/lib/utils"
 
-export function GdprSettings({ orgId, orgSlug }: { orgId: string; orgSlug: string }) {
+export function GdprSettings({ orgSlug }: { orgId: string; orgSlug: string }) {
   const [requests, setRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 

@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
         <CardHeader>
           <CardTitle>Check your email</CardTitle>
           <CardDescription>
-            If an account exists for <strong>{email}</strong>, we've sent a password reset link.
+            If an account exists for <strong>{email}</strong>, we&apos;ve sent a password reset link.
           </CardDescription>
         </CardHeader>
         <CardFooter className="justify-center">
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
     <Card>
       <CardHeader>
         <CardTitle>Reset password</CardTitle>
-        <CardDescription>Enter your email and we'll send a reset link</CardDescription>
+        <CardDescription>Enter your email and we&apos;ll send a reset link</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
