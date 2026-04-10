@@ -1,0 +1,776 @@
+// Cara — European Animal Shelter Management
+// Prisma Schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["public"]
+}
+
+// ─────────────────────────────────────────────
+// AUTH (NextAuth)
+// ─────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@schema("public")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────
+// CORE MULTI-TENANCY
+// ─────────────────────────────────────────────
+
+model Organization {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique // cara.ie/[slug]
+  logo            String?
+  email           String?
+  phone           String?
+  address         String?
+  city            String?
+  county          String?
+  country         String   @default("IE")
+  postcode        String?
+  website         String?
+  chyNumber       String?  // Irish Gift Aid charity number
+  charityNumber   String?  // UK charity number
+  registrationNum String?
+  description     String?
+  stripeAccountId String?  // Stripe Connect account
+  stripeOnboarded Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  users              UserOrganization[]
+  animals            Animal[]
+  locations          Location[]
+  adopters           Adopter[]
+  fosters            Foster[]
+  volunteers         Volunteer[]
+  donors             Donor[]
+  adoptionApps       AdoptionApplication[]
+  adoptionContracts  AdoptionContract[]
+  fosterAssignments  FosterAssignment[]
+  donations          Donation[]
+  campaigns          Campaign[]
+  emailTemplates     EmailTemplate[]
+  gdprRequests       GdprRequest[]
+  invites            Invite[]
+
+  @@schema("public")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?  // hashed, for credential login
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  accounts         Account[]
+  sessions         Session[]
+  organizations    UserOrganization[]
+  assignedApps     AdoptionApplication[] @relation("AssignedTo")
+  homeChecks       AdoptionApplication[] @relation("HomeChecker")
+  activityLog      ActivityLog[]
+
+  @@schema("public")
+}
+
+model UserOrganization {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrgRole      @default(STAFF)
+  joinedAt       DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@schema("public")
+}
+
+model Invite {
+  id             String       @id @default(cuid())
+  email          String
+  organizationId String
+  role           OrgRole      @default(STAFF)
+  token          String       @unique @default(cuid())
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([email, organizationId])
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────
+// ANIMALS
+// ─────────────────────────────────────────────
+
+model Animal {
+  id              String        @id @default(cuid())
+  organizationId  String
+  name            String
+  species         Species
+  breed           String?
+  mixedBreed      Boolean       @default(false)
+  ageYears        Int?
+  ageMonths       Int?
+  ageEstimated    Boolean       @default(false)
+  sex             Sex           @default(UNKNOWN)
+  size            Size?
+  colour          String?
+  markings        String?
+  microchipNumber String?
+  microchipDate   DateTime?
+  microchipLocation String?
+  status          AnimalStatus  @default(INTAKE)
+  intakeDate      DateTime
+  intakeReason    IntakeReason?
+  intakeNotes     String?
+  intakeLocation  String?       // where they were picked up
+  locationId      String?       // current kennel/room/foster
+  isNeutered      Boolean?
+  neutered        Boolean       @default(false) // alias for form compat
+  neuteredDate    DateTime?
+  isVaccinated    Boolean?
+  vaccinated      Boolean       @default(false) // alias for form compat
+  dobApprox       DateTime?     // approximate date of birth
+  weightKg        Decimal?
+  intakeType      String?       // friendly alias for intakeReason
+  description     String?        // public-facing alias for publicBio
+  notes           String?        // internal notes alias for intakeNotes
+  publicProfile   Boolean       @default(false) // show on public portal
+  publicBio       String?
+  photos          AnimalPhoto[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  organization      Organization          @relation(fields: [organizationId], references: [id])
+  location          Location?             @relation(fields: [locationId], references: [id])
+  medicalRecords    MedicalRecord[]
+  weightLogs        WeightLog[]
+  adoptionApps      AdoptionApplication[]
+  adoptionContract  AdoptionContract?
+  fosterAssignments FosterAssignment[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([species])
+  @@schema("public")
+}
+
+model AnimalPhoto {
+  id        String   @id @default(cuid())
+  animalId  String
+  url       String   // Supabase Storage public URL
+  key       String   // Supabase Storage path (e.g. "animalId/timestamp.jpg")
+  isPrimary Boolean  @default(false)
+  position  Int      @default(0)
+  caption   String?
+  createdAt DateTime @default(now())
+  animal    Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model Location {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String       // "Kennel 3", "Foster - Murphy Family", "Isolation Room"
+  type           LocationType @default(KENNEL)
+  capacity       Int          @default(1)
+  notes          String?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  animals        Animal[]
+
+  @@schema("public")
+}
+
+model MedicalRecord {
+  id          String            @id @default(cuid())
+  animalId    String
+  type        MedicalRecordType
+  description String
+  date        DateTime
+  vetName     String?
+  vetClinic   String?
+  cost        Decimal?
+  currency    String            @default("EUR")
+  notes       String?
+  nextDueDate DateTime?
+  createdAt   DateTime          @default(now())
+  animal      Animal            @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model WeightLog {
+  id        String   @id @default(cuid())
+  animalId  String
+  weightKg  Decimal
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+  animal    Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────
+// PEOPLE
+// ─────────────────────────────────────────────
+
+model Adopter {
+  id              String    @id @default(cuid())
+  organizationId  String
+  firstName       String
+  lastName        String
+  email           String
+  phone           String?
+  address         String?
+  city            String?
+  county          String?
+  country         String    @default("IE")
+  postcode        String?
+  gdprConsent     Boolean   @default(false)
+  gdprConsentAt   DateTime?
+  gdprConsentIp   String?
+  marketingConsent Boolean  @default(false)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organization     Organization          @relation(fields: [organizationId], references: [id])
+  adoptionApps     AdoptionApplication[]
+  adoptionContracts AdoptionContract[]
+
+  @@unique([email, organizationId])
+  @@index([organizationId])
+  @@schema("public")
+}
+
+model Foster {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  firstName           String
+  lastName            String
+  email               String
+  phone               String?
+  address             String?
+  city                String?
+  county              String?
+  country             String    @default("IE")
+  postcode            String?
+  approved            Boolean   @default(false)
+  approvedAt          DateTime?
+  maxAnimals          Int       @default(1)
+  hasGarden           Boolean?
+  hasChildren         Boolean?
+  hasOtherPets        Boolean?
+  otherPetsDetails    String?
+  homeType            String?   // house, apartment, farm
+  speciesPreferences String // JSON array
+  availableFrom       DateTime?
+  availableTo         DateTime?
+  notes               String?
+  gdprConsent         Boolean   @default(false)
+  gdprConsentAt       DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  organization  Organization       @relation(fields: [organizationId], references: [id])
+  assignments   FosterAssignment[]
+
+  @@unique([email, organizationId])
+  @@index([organizationId])
+  @@schema("public")
+}
+
+model FosterAssignment {
+  id             String    @id @default(cuid())
+  organizationId String
+  animalId       String
+  fosterId       String
+  startDate      DateTime
+  endDate        DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  animal       Animal       @relation(fields: [animalId], references: [id])
+  foster       Foster       @relation(fields: [fosterId], references: [id])
+  diaryEntries FosterDiaryEntry[]
+
+  @@index([organizationId])
+  @@schema("public")
+}
+
+model FosterDiaryEntry {
+  id                 String           @id @default(cuid())
+  fosterAssignmentId String
+  content            String
+  photos        String // JSON array of uploadthing URLs
+  createdAt          DateTime         @default(now())
+  assignment         FosterAssignment @relation(fields: [fosterAssignmentId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model Volunteer {
+  id             String    @id @default(cuid())
+  organizationId String
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  county         String?
+  skills        String // JSON array
+  isHomeChecker  Boolean   @default(false)
+  isDriver       Boolean   @default(false)
+  available      Boolean   @default(true)
+  hoursLogged    Decimal   @default(0)
+  notes          String?
+  gdprConsent    Boolean   @default(false)
+  gdprConsentAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([email, organizationId])
+  @@index([organizationId])
+  @@schema("public")
+}
+
+model Donor {
+  id              String    @id @default(cuid())
+  organizationId  String
+  firstName       String
+  lastName        String
+  email           String
+  phone           String?
+  address         String?
+  isGiftAidEligible Boolean @default(false) // UK Gift Aid
+  isTaxRelief     Boolean  @default(false)  // Irish CHY Tax Relief
+  notes           String?
+  gdprConsent     Boolean  @default(false)
+  gdprConsentAt   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  donations    Donation[]
+
+  @@unique([email, organizationId])
+  @@index([organizationId])
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────
+// ADOPTION WORKFLOW
+// ─────────────────────────────────────────────
+
+model AdoptionApplication {
+  id               String            @id @default(cuid())
+  organizationId   String
+  animalId         String
+  adopterId        String?           // linked if adopter already exists
+  // Application fields (captured even before adopter profile created)
+  applicantName    String
+  applicantEmail   String
+  applicantPhone   String?
+  applicantAddress String?
+  applicantCounty  String?
+  // Household
+  householdType    String?           // house, apartment, farm
+  hasGarden        Boolean           @default(false)
+  gardenFenced     Boolean?
+  hasChildren      Boolean           @default(false)
+  childrenAges     String?
+  hasOtherPets     Boolean           @default(false)
+  otherPetsDetails String?
+  // Experience
+  previousPets     String?
+  experienceLevel  String?
+  whyAdopt         String?
+  workingHours     String?
+  // Status
+  status           ApplicationStatus @default(PENDING)
+  assignedToId     String?
+  homeCheckerId    String?
+  homeCheckDate    DateTime?
+  homeCheckNotes   String?
+  homeCheckPassed  Boolean?
+  internalNotes    String?
+  // Application type
+  applicationType  String?           @default("ADOPT") // "ADOPT" | "FOSTER"
+  rentOrOwn        String?           // "own" | "rent" | "other"
+  landlordPermission Boolean?        // true if renting and landlord allows pets
+  // GDPR
+  gdprConsent      Boolean           @default(false)
+  gdprConsentAt    DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id])
+  animal       Animal            @relation(fields: [animalId], references: [id])
+  adopter      Adopter?          @relation(fields: [adopterId], references: [id])
+  assignedTo   User?             @relation("AssignedTo", fields: [assignedToId], references: [id])
+  homeChecker  User?             @relation("HomeChecker", fields: [homeCheckerId], references: [id])
+  contract     AdoptionContract?
+
+  @@index([organizationId])
+  @@index([status])
+  @@schema("public")
+}
+
+model AdoptionContract {
+  id              String    @id @default(cuid())
+  organizationId  String
+  animalId        String    @unique
+  adopterId       String
+  applicationId   String    @unique
+  contractText    String
+  signedAt        DateTime?
+  signatureData   String?    // base64 or docusign reference
+  adoptionFee     Decimal?
+  currency        String    @default("EUR")
+  stripePaymentId String?
+  donationAmount  Decimal?
+  donationPaymentId String?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  organization Organization        @relation(fields: [organizationId], references: [id])
+  animal       Animal              @relation(fields: [animalId], references: [id])
+  adopter      Adopter             @relation(fields: [adopterId], references: [id])
+  application  AdoptionApplication @relation(fields: [applicationId], references: [id])
+
+  @@index([organizationId])
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────
+// DONATIONS & FUNDRAISING
+// ─────────────────────────────────────────────
+
+model Donation {
+  id               String         @id @default(cuid())
+  organizationId   String
+  donorId          String?
+  // Donor info (captured even without a Donor profile)
+  donorName        String?
+  donorEmail       String?
+  amount           Decimal
+  currency         String         @default("EUR")
+  type             DonationType   @default(ONE_OFF)
+  status           DonationStatus @default(PENDING)
+  stripePaymentId  String?
+  stripeSubscriptionId String?
+  campaignId       String?
+  source           String?        // "adoption_checkout", "campaign", "direct", "public_portal"
+  giftAid          Boolean        @default(false)
+  taxRelief        Boolean        @default(false)
+  notes            String?
+  createdAt        DateTime       @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  donor        Donor?       @relation(fields: [donorId], references: [id])
+  campaign     Campaign?    @relation(fields: [campaignId], references: [id])
+
+  @@index([organizationId])
+  @@schema("public")
+}
+
+model Campaign {
+  id             String    @id @default(cuid())
+  organizationId String
+  title          String
+  slug           String
+  description    String
+  goalAmount     Decimal?
+  currency       String    @default("EUR")
+  coverImage     String?
+  isActive       Boolean   @default(true)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  donations    Donation[]
+
+  @@unique([slug, organizationId])
+  @@index([organizationId])
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────
+// EMAIL & GDPR
+// ─────────────────────────────────────────────
+
+model EmailTemplate {
+  id             String    @id @default(cuid())
+  organizationId String
+  type           EmailType
+  subject        String
+  bodyHtml       String
+  bodyText       String?
+  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, type])
+  @@schema("public")
+}
+
+model GdprRequest {
+  id             String          @id @default(cuid())
+  organizationId String
+  requesterEmail String
+  requesterName  String
+  type           GdprRequestType
+  status         GdprStatus      @default(PENDING)
+  notes          String?
+  completedAt    DateTime?
+  createdAt      DateTime        @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@schema("public")
+}
+
+model ActivityLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String   // "animal.status_changed", "application.approved", etc.
+  entityType     String?
+  entityId       String?
+  meta           Json?
+  createdAt      DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([organizationId])
+  @@index([entityType, entityId])
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum OrgRole {
+  ADMIN
+  STAFF
+  VOLUNTEER
+  FOSTER
+
+  @@schema("public")
+}
+
+enum Species {
+  DOG
+  CAT
+  RABBIT
+  BIRD
+  SMALL_ANIMAL
+  FARM
+  REPTILE
+  OTHER
+
+  @@schema("public")
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  UNKNOWN
+
+  @@schema("public")
+}
+
+enum Size {
+  TINY
+  SMALL
+  MEDIUM
+  LARGE
+  XLARGE
+
+  @@schema("public")
+}
+
+enum AnimalStatus {
+  INTAKE
+  ASSESSMENT
+  AVAILABLE
+  FOSTERED
+  IN_FOSTER       // alias
+  ADOPTION_PENDING
+  ADOPTED
+  TRANSFERRED
+  DECEASED
+  ON_HOLD
+  MEDICAL_HOLD    // alias
+  QUARANTINE      // alias
+
+  @@schema("public")
+}
+
+enum IntakeReason {
+  STRAY
+  SURRENDER
+  TRANSFER
+  SEIZED
+  BORN_IN_CARE
+  OTHER
+
+  @@schema("public")
+}
+
+enum LocationType {
+  KENNEL
+  CATTERY
+  ISOLATION
+  FOSTER_HOME
+  MEDICAL
+  OTHER
+
+  @@schema("public")
+}
+
+enum MedicalRecordType {
+  VACCINATION
+  NEUTERING
+  VET_VISIT
+  MEDICATION
+  SURGERY
+  DENTAL
+  PARASITE_TREATMENT
+  WEIGHT_CHECK
+  BLOOD_TEST
+  OTHER
+
+  @@schema("public")
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING       // alias for UNDER_REVIEW
+  UNDER_REVIEW
+  HOME_CHECK      // alias
+  HOME_CHECK_SCHEDULED
+  HOME_CHECK_DONE
+  APPROVED
+  CONTRACT_SENT
+  REJECTED
+  WITHDRAWN
+  COMPLETED
+
+  @@schema("public")
+}
+
+enum DonationType {
+  ONE_OFF
+  RECURRING_MONTHLY
+  RECURRING_ANNUAL
+
+  @@schema("public")
+}
+
+enum DonationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+
+  @@schema("public")
+}
+
+enum EmailType {
+  APPLICATION_RECEIVED
+  APPLICATION_APPROVED
+  APPLICATION_REJECTED
+  HOME_CHECK_SCHEDULED
+  ADOPTION_CONTRACT
+  ADOPTION_COMPLETE
+  FOSTER_WELCOME
+  FOSTER_CHECK_IN
+  DONATION_RECEIPT
+  CAMPAIGN_UPDATE
+  WELCOME
+
+  @@schema("public")
+}
+
+enum GdprRequestType {
+  ACCESS       // subject access request
+  ERASURE      // right to be forgotten
+  RECTIFICATION
+  PORTABILITY
+
+  @@schema("public")
+}
+
+enum GdprStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+
+  @@schema("public")
+}

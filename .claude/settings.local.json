@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.ts$\")",
+      "Bash(npx tsc:*)",
+      "Bash(xargs grep:*)",
+      "Bash(ls C:/Users/colin/OneDrive/Desktop/cara/.env*)"
+    ]
+  }
+}
