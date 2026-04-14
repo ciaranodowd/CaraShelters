@@ -30,7 +30,7 @@ export default async function OrgLayout({
   if (!membership) notFound()
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar orgSlug={org.slug} orgName={org.name} />
       <main className="flex-1 min-w-0 pb-16 md:pb-0">
         {children}

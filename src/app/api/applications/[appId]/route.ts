@@ -9,7 +9,10 @@ export async function GET(req: NextRequest, { params }: { params: { appId: strin
 
   const app = await prisma.adoptionApplication.findUnique({
     where: { id: params.appId },
-    include: { animal: { select: { name: true, species: true } } },
+    include: {
+      animal: { select: { name: true, species: true } },
+      contract: true,
+    },
   })
   if (!app) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
